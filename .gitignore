@@ -1,0 +1,60 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Compiled output
+dist/
+build/
+tmp/
+temp/
+
+# Optional npm cache directory
+.npm
+
+# dotenv environment variables
+.env
+.env.*.local
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage directory used by testing tools
+coverage/
+
+# Jest test results
+jest-test-results.json
+
+# Nest CLI
+.nest-cli.json
+
+# Swagger generated files
+swagger-stats.json
+
+# PM2 logs and process files
+pids/
+*.pid
+*.log
+
+# Others
+*.tgz

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Metric, MetricDocument } from './schema/metric.schema';
+import { IMetric, Metric, MetricDocument } from './schema/metric.schema';
 import { CreateMetricDto } from './dto/create-metric.dto';
 import { QueryMetricChartDto, QueryMetricDto } from './dto/query-metric.dto';
 import { MetricModel } from './model';
@@ -21,26 +21,15 @@ export class MetricService {
   }
 
   async findAll(query: QueryMetricDto): Promise<MetricModel[]> {
-    const metrics = await this.metricModel
+    const metrics: IMetric[] = await this.metricModel
       .find({ userId: query.userId, ...(query.type && { type: query.type }) })
-      .exec();
+      .lean();
 
-    if (query.unit) {
-      const mapped = metrics.map((metric) => {
-        const metricObject = metric.toObject();
-        const unit = query.unit ?? metricObject.unit;
-        const value =
-          metricObject.unit === unit
-            ? metricObject.value
-            : (metricObject.convertedValues?.[unit] ?? null);
-
-        return { ...metricObject, value, unit };
-      });
-      console.log(mapped);
-
-      return PlainToInstance(MetricModel, mapped);
-    }
-    return PlainToInstance(MetricModel, metrics);
+    const result = query.unit
+      ? metrics.map((metric) => this.convertMetricUnit(metric, query.unit))
+      : metrics;
+    console.log(result);
+    return PlainToInstance(MetricModel, result);
   }
 
   async findForChart(query: QueryMetricChartDto): Promise<MetricModel[]> {
@@ -59,7 +48,7 @@ export class MetricService {
     const since = new Date();
     since.setDate(since.getDate() - periodInDays);
 
-    const result = await this.metricModel.aggregate([
+    const metrics: IMetric[] = await this.metricModel.aggregate([
       {
         $match: {
           userId: query.userId,
@@ -88,21 +77,24 @@ export class MetricService {
       },
     ]);
 
-    if (query.unit) {
-      const mapped = result.map((metric) => {
-        const unit = query.unit ?? metric.unit;
-        const value =
-          metric.unit === unit
-            ? metric.value
-            : (metric.convertedValues?.[unit] ?? null);
-
-        return { ...metric, value, unit };
-      });
-      console.log(mapped);
-
-      return PlainToInstance(MetricModel, mapped);
-    }
+    const result = query.unit
+      ? metrics.map((metric) => this.convertMetricUnit(metric, query.unit))
+      : metrics;
 
     return PlainToInstance(MetricModel, result);
+  }
+
+  private convertMetricUnit(metric: IMetric, targetUnit?: string): IMetric {
+    const unit = targetUnit ?? metric.unit;
+    const value =
+      metric.unit === unit
+        ? metric.value
+        : ((metric.convertedValues?.[unit] as number) ?? null);
+
+    return {
+      ...metric,
+      value,
+      unit,
+    };
   }
 }

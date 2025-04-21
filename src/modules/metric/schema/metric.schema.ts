@@ -8,8 +8,17 @@ import { BadRequestException } from '@nestjs/common';
 
 export type MetricDocument = Metric & Document;
 
+export interface IMetric {
+  userId: string;
+  type: MetricType;
+  value: number;
+  unit: string;
+  date: Date;
+  convertedValues?: Record<string, number>;
+}
+
 @Schema()
-export class Metric {
+export class Metric implements Metric {
   @Prop({ required: true })
   userId: string;
 
